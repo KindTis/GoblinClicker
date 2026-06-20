@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 test.afterEach(async ({ page }) => {
   const harness = await page.evaluate(() => window.__goblinTest);
@@ -174,6 +175,67 @@ test("새 게임 시작 확인 모달의 취소와 확인 버튼이 동작한다
     .toEqual({ coins: 0, defeatedCount: 0, clubLevel: 0 });
 });
 
+test("투석기 틱 중 새 게임 시작 확인 모달 버튼은 실제 포인터 클릭으로 동작한다", async ({ page, isMobile }) => {
+  test.skip(isMobile, "desktop project covers the reported deployed modal click regression");
+  await page.goto("/");
+  await expect.poll(() => page.evaluate(() => window.__goblinTest?.getRuntimeSnapshot().mode)).toBe("ready");
+
+  await page.evaluate(() => {
+    const harness = window.__goblinTest;
+    const state = harness?.getRuntimeSnapshot();
+    if (!harness || state?.mode !== "ready") {
+      throw new Error("test harness ready state is required");
+    }
+    harness.setRuntimeState({
+      ...state,
+      game: {
+        ...state.game,
+        catapultCooldownRemainingMs: 3700,
+        coins: 137,
+        defeatedCount: 38,
+        goblinHp: 2134,
+        upgrades: { ...state.game.upgrades, club: 7, catapult: 1 },
+      },
+      runtimeClock: { ...state.runtimeClock, lastVisibleTickAtMs: performance.now() },
+    });
+  });
+
+  await expect(page.getByText(/투석기:/)).toBeVisible();
+  const shopToggle = page.getByRole("button", { name: /상점 열기/ });
+  if (await shopToggle.isVisible()) {
+    await shopToggle.click();
+  }
+
+  const newGameButton = page.locator(".reset-button");
+  await newGameButton.scrollIntoViewIfNeeded();
+  await newGameButton.click();
+
+  const dialog = page.getByRole("dialog", { name: "새 게임 시작 확인" });
+  await expect(dialog).toBeVisible();
+  await delayedPointerClick(page, '.modal [data-action="cancel"]');
+  await expect(dialog).toBeHidden();
+
+  await newGameButton.scrollIntoViewIfNeeded();
+  await newGameButton.click();
+  await expect(dialog).toBeVisible();
+  await delayedPointerClick(page, '.modal [data-action="confirm"]');
+  await expect(dialog).toBeHidden();
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const state = window.__goblinTest?.getRuntimeSnapshot();
+        return state?.mode === "ready"
+          ? {
+              coins: state.game.coins,
+              defeatedCount: state.game.defeatedCount,
+              catapultLevel: state.game.upgrades.catapult,
+            }
+          : null;
+      }),
+    )
+    .toEqual({ coins: 0, defeatedCount: 0, catapultLevel: 0 });
+});
+
 test("우측 상점 패널은 투석기 렌더 중에도 스크롤 위치를 유지한다", async ({ page, isMobile }) => {
   test.skip(isMobile, "desktop project only");
   await page.setViewportSize({ width: 900, height: 360 });
@@ -211,3 +273,18 @@ test("우측 상점 패널은 투석기 렌더 중에도 스크롤 위치를 유
 
   expect(await shop.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
 });
+
+async function delayedPointerClick(page: Page, selector: string): Promise<void> {
+  const point = await page.evaluate((targetSelector) => {
+    const target = document.querySelector<HTMLElement>(targetSelector);
+    if (!target) {
+      throw new Error(`target not found: ${targetSelector}`);
+    }
+    const rect = target.getBoundingClientRect();
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  }, selector);
+  await page.mouse.move(point.x, point.y);
+  await page.mouse.down();
+  await page.waitForTimeout(120);
+  await page.mouse.up();
+}

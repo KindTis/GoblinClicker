@@ -21,4 +21,14 @@ describe("modal", () => {
     expect(root.textContent).toContain("정말 새 게임으로 시작할까요?");
     expect(root.textContent).not.toContain("저장 초기화");
   });
+
+  it("이미 열린 재시작 확인 모달은 다시 만들지 않는다", () => {
+    const root = document.createElement("div");
+
+    renderResetModal(root, handlers);
+    const cancelButton = root.querySelector('[data-action="cancel"]');
+    renderResetModal(root, handlers);
+
+    expect(root.querySelector('[data-action="cancel"]')).toBe(cancelButton);
+  });
 });

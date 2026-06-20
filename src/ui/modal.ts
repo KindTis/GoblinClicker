@@ -30,6 +30,9 @@ export function renderLoadErrorModal(root: HTMLElement, state: LoadErrorRuntimeS
 }
 
 export function renderResetModal(root: HTMLElement, handlers: ModalHandlers): void {
+  if (root.querySelector('[role="dialog"][aria-label="새 게임 시작 확인"]')) {
+    return;
+  }
   root.replaceChildren();
   const dialog = document.createElement("div");
   dialog.className = "modal-backdrop";
