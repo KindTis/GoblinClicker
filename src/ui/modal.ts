@@ -34,11 +34,11 @@ export function renderResetModal(root: HTMLElement, handlers: ModalHandlers): vo
   const dialog = document.createElement("div");
   dialog.className = "modal-backdrop";
   dialog.innerHTML = `
-    <div class="modal" role="dialog" aria-modal="true" aria-label="저장 초기화 확인">
-      <h2>저장 초기화</h2>
-      <p>현재 저장 데이터를 삭제하고 처음부터 시작합니다.</p>
+    <div class="modal" role="dialog" aria-modal="true" aria-label="새 게임 시작 확인">
+      <h2>새 게임 시작</h2>
+      <p>정말 새 게임으로 시작할까요?</p>
       <div class="modal-actions">
-        <button type="button" data-action="confirm">초기화</button>
+        <button type="button" data-action="confirm">새 게임 시작</button>
         <button type="button" data-action="cancel">취소</button>
       </div>
     </div>

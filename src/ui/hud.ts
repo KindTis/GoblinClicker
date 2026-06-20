@@ -142,7 +142,7 @@ function createShop(state: HudRenderState, handlers: HudHandlers, existingSectio
       <button type="button" class="mobile-close">닫기</button>
     </div>
     <div class="shop-list"></div>
-    <button type="button" class="reset-button">저장 초기화</button>
+    <button type="button" class="reset-button">새 게임 시작</button>
   `;
 
   section.querySelector<HTMLButtonElement>(".mobile-close")?.addEventListener("click", () => handlers.onToggleShop(false));
@@ -201,15 +201,18 @@ function createShopRow(
       <p>레벨 ${level} · 비용 ${cost}</p>
       <p>${definition.description}</p>
       <p id="${row.describedById}" class="shop-status">${statusText}</p>
+      <p id="${row.tooltipId}" class="shop-tooltip" role="tooltip">${row.tooltipText}</p>
     </div>
-    <button type="button" aria-disabled="${row.ariaDisabled}" aria-describedby="${row.describedById}">${row.buttonText}</button>
+    <button type="button" aria-disabled="${row.ariaDisabled}" aria-describedby="${row.describedById} ${row.tooltipId}">${row.buttonText}</button>
   `;
-  article.querySelector("button")?.addEventListener("click", () => {
+  const button = article.querySelector("button");
+  if (button) {
+    button.disabled = row.ariaDisabled;
+    button.title = row.tooltipText;
+  }
+  button?.addEventListener("click", () => {
     if (row.activationBehavior === "purchase") {
       handlers.onPurchase(row.upgradeId);
-    } else if (row.activationBehavior === "showInsufficientFeedback") {
-      article.classList.add("feedback");
-      window.setTimeout(() => article.classList.remove("feedback"), 220);
     }
   });
   return article;
@@ -230,6 +233,7 @@ function selectGhostHp(enemy: EnemyRenderState): number {
   }
   window.setTimeout(() => {
     ghostHpByEnemyId.set(enemy.enemyInstanceId, enemy.hp);
+    if (typeof document === "undefined") return;
     const bar = document.querySelector<HTMLElement>(
       `.hp-bar[data-enemy-id="${enemy.enemyInstanceId}"] .hp-ghost`,
     );

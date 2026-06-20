@@ -171,6 +171,7 @@ button[aria-disabled="true"] {
 }
 
 .shop-row {
+  position: relative;
   display: grid;
   grid-template-columns: 48px minmax(0, 1fr);
   gap: 10px;
@@ -221,6 +222,33 @@ button[aria-disabled="true"] {
 
 .shop-status {
   min-height: 20px;
+}
+
+.shop-tooltip {
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+  right: 10px;
+  bottom: calc(100% - 4px);
+  left: 10px;
+  margin: 0;
+  border: 1px solid rgba(245, 200, 75, 0.35);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #f7f1df;
+  background: rgba(29, 27, 18, 0.96);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity 120ms ease-out,
+    transform 120ms ease-out;
+}
+
+.shop-row:hover .shop-tooltip,
+.shop-row:focus-within .shop-tooltip {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .reset-button {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 import { ASSETS } from "../../src/assets/assetManifest";
 
 describe("assetManifest", () => {
@@ -33,5 +34,12 @@ describe("assetManifest", () => {
     for (const asset of Object.values(ASSETS)) {
       expect(asset.src).not.toMatch(/^\/src\//);
     }
+  });
+
+  it("피격 고블린 에셋은 아파하는 반응으로 설명된다", () => {
+    const svg = readFileSync("src/assets/goblin-hit.svg", "utf-8");
+
+    expect(svg).toContain("<title>아파하는 고블린 피격 반응</title>");
+    expect(svg).toContain("<desc>공격을 받아 눈을 찡그리고 입을 일그러뜨린 고블린</desc>");
   });
 });

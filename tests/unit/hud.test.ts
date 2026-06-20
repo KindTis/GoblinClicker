@@ -51,4 +51,32 @@ describe("hud", () => {
     expect(root.querySelectorAll(".recommend")).toHaveLength(1);
     expect(root.querySelector(".recommend")?.parentElement?.textContent).toContain("낡은 몽둥이");
   });
+
+  it("비용 부족 구매 버튼은 비활성화하고 구매 가능 버튼에는 툴팁 설명을 연결한다", () => {
+    const root = document.createElement("div");
+    const runtime = { ...createInitialRuntimeState(), game: { ...createInitialRuntimeState().game, coins: 3 } };
+
+    renderHud(root, { runtime, enemy: selectEnemyRenderState(runtime), shopOpen: true, purchaseFeedback: null }, handlers);
+
+    const clubButton = [...root.querySelectorAll("button")].find((button) => button.textContent === "낡은 몽둥이");
+    const catapultButton = [...root.querySelectorAll("button")].find(
+      (button) => button.textContent === "삐걱대는 투석기",
+    );
+
+    expect(clubButton?.disabled).toBe(false);
+    expect(clubButton?.title).toContain("클릭 피해 1 -> 2");
+    expect(clubButton?.getAttribute("aria-describedby")).toContain("shop-club-tooltip");
+    expect(root.querySelector("#shop-club-tooltip")?.textContent).toContain("클릭 피해 1 -> 2");
+    expect(catapultButton?.disabled).toBe(true);
+  });
+
+  it("상점의 파괴적 시작 버튼은 새 게임 시작으로 표시한다", () => {
+    const root = document.createElement("div");
+    const runtime = createInitialRuntimeState();
+
+    renderHud(root, { runtime, enemy: selectEnemyRenderState(runtime), shopOpen: true, purchaseFeedback: null }, handlers);
+
+    expect(root.querySelector(".reset-button")?.textContent).toBe("새 게임 시작");
+    expect(root.textContent).not.toContain("저장 초기화");
+  });
 });
