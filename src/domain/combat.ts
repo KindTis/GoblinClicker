@@ -2,9 +2,11 @@ import { CATAPULT_COOLDOWN_MS } from "./constants";
 import {
   calculateCatapultDamage,
   calculateClickDamage,
+  calculateFinalDamage,
   calculateGoblinLevel,
   calculateGoblinMaxHp,
   calculateKillReward,
+  calculateMudTrapArmedLevel,
   calculateMudTrapMultiplier,
 } from "./progression";
 import type { GameState } from "./types";
@@ -23,9 +25,9 @@ export type CatapultTickResult =
   | { state: GameState; fired: true; damage: number; defeated: boolean };
 
 export function applyDirectAttack(state: GameState): AttackResult {
-  const clickDamage = calculateClickDamage(state.upgrades.club);
+  const clickDamage = calculateClickDamage(state.upgrades.club, state.upgrades.battleAxe);
   const multiplier = state.mudTrapArmedLevel > 0 ? calculateMudTrapMultiplier(state.mudTrapArmedLevel) : 1;
-  const damage = clickDamage * multiplier;
+  const damage = calculateFinalDamage(clickDamage * multiplier, state.upgrades.blacksmithContract);
   const stateAfterHit: GameState = {
     ...state,
     goblinHp: Math.max(0, state.goblinHp - damage),
@@ -56,8 +58,11 @@ export function tickCatapult(
     };
   }
 
-  const clickDamage = calculateClickDamage(state.upgrades.club);
-  const damage = calculateCatapultDamage(clickDamage, state.upgrades.catapult);
+  const clickDamage = calculateClickDamage(state.upgrades.club, state.upgrades.battleAxe);
+  const damage = calculateFinalDamage(
+    calculateCatapultDamage(clickDamage, state.upgrades.catapult, state.upgrades.reinforcedCatapult),
+    state.upgrades.blacksmithContract,
+  );
   const stateAfterHit: GameState = {
     ...state,
     goblinHp: Math.max(0, state.goblinHp - damage),
@@ -79,9 +84,9 @@ export function defeatCurrentGoblin(state: GameState): GameState {
   return {
     ...state,
     defeatedCount: nextDefeatedCount,
-    coins: state.coins + calculateKillReward(defeatedGoblinLevel, state.upgrades.baitBag),
+    coins: state.coins + calculateKillReward(defeatedGoblinLevel, state.upgrades.baitBag, state.upgrades.goldenBaitJar),
     goblinHp: nextMaxHp,
-    mudTrapArmedLevel: state.upgrades.mudTrap > 0 ? state.upgrades.mudTrap : 0,
+    mudTrapArmedLevel: calculateMudTrapArmedLevel(state.upgrades.mudTrap, state.upgrades.deepMudBog),
     catapultCooldownRemainingMs: state.upgrades.catapult > 0 ? CATAPULT_COOLDOWN_MS : 0,
   };
 }

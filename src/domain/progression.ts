@@ -13,8 +13,9 @@ export function calculateBaseKillReward(goblinLevel: number): number {
   return 1 + Math.floor(goblinLevel * 0.6);
 }
 
-export function calculateKillReward(goblinLevel: number, baitBagLevel: number): number {
-  return calculateBaseKillReward(goblinLevel) + baitBagLevel;
+export function calculateKillReward(goblinLevel: number, baitBagLevel: number, goldenBaitJarLevel = 0): number {
+  const baseReward = calculateBaseKillReward(goblinLevel);
+  return baseReward + baitBagLevel + Math.floor(baseReward * 0.4 * goldenBaitJarLevel);
 }
 
 export function calculateUpgradeCost(upgradeId: UpgradeId, currentLevel: number): number {
@@ -22,14 +23,26 @@ export function calculateUpgradeCost(upgradeId: UpgradeId, currentLevel: number)
   return Math.floor(definition.baseCost * definition.growthRate ** currentLevel);
 }
 
-export function calculateClickDamage(clubLevel: number): number {
-  return 1 + clubLevel;
+export function calculateClickDamage(clubLevel: number, battleAxeLevel = 0): number {
+  return 1 + clubLevel + 3 * battleAxeLevel;
+}
+
+export function calculateFinalDamage(baseDamage: number, blacksmithContractLevel = 0): number {
+  return Math.max(1, Math.floor(baseDamage * (1 + 0.18 * blacksmithContractLevel)));
 }
 
 export function calculateMudTrapMultiplier(armedLevel: number): number {
   return 1 + 2 * armedLevel;
 }
 
-export function calculateCatapultDamage(clickDamage: number, catapultLevel: number): number {
-  return clickDamage * (1 + catapultLevel);
+export function calculateMudTrapArmedLevel(mudTrapLevel: number, deepMudBogLevel = 0): number {
+  return mudTrapLevel + 2 * deepMudBogLevel;
+}
+
+export function calculateCatapultDamage(
+  clickDamage: number,
+  catapultLevel: number,
+  reinforcedCatapultLevel = 0,
+): number {
+  return clickDamage * (1 + catapultLevel) + clickDamage * 3 * reinforcedCatapultLevel;
 }

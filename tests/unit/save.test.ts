@@ -91,6 +91,7 @@ describe("save", () => {
           club: 2,
           catapult: 1,
           mudTrap: 1,
+          deepMudBog: 3,
           extra: 100,
         },
       },
@@ -102,16 +103,49 @@ describe("save", () => {
         defeatedCount: 3,
         coins: 0,
         goblinHp: 8,
-        mudTrapArmedLevel: 1,
+        mudTrapArmedLevel: 7,
         catapultCooldownRemainingMs: CATAPULT_COOLDOWN_MS,
         upgrades: {
           club: 2,
           catapult: 1,
           baitBag: 0,
           mudTrap: 1,
+          battleAxe: 0,
+          reinforcedCatapult: 0,
+          goldenBaitJar: 0,
+          deepMudBog: 3,
+          blacksmithContract: 0,
         },
       },
     });
+  });
+
+  it("상위 업그레이드와 확장된 진흙 함정 준비 레벨을 정규화한다", () => {
+    const normalized = normalizeSaveData({
+      saveVersion: SAVE_VERSION,
+      state: {
+        defeatedCount: 3,
+        coins: 7,
+        goblinHp: 4,
+        mudTrapArmedLevel: 99,
+        catapultCooldownRemainingMs: 999999,
+        upgrades: {
+          club: 1,
+          catapult: 1,
+          baitBag: 1,
+          mudTrap: 2,
+          battleAxe: 3,
+          reinforcedCatapult: 4,
+          goldenBaitJar: 5,
+          deepMudBog: 3,
+          blacksmithContract: 1,
+        },
+      },
+    });
+    if ("error" in normalized) throw new Error("expected normalized save");
+    expect(normalized.state.upgrades.deepMudBog).toBe(3);
+    expect(normalized.state.mudTrapArmedLevel).toBe(8);
+    expect(normalized.state.catapultCooldownRemainingMs).toBe(CATAPULT_COOLDOWN_MS);
   });
 
   it("saveGame은 savedAt을 생성하지 않고 GameState만 저장한다", () => {

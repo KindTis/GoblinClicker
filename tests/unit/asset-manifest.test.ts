@@ -13,13 +13,25 @@ describe("assetManifest", () => {
         "goblinIdle",
         "hitSpark",
         "upgradeBaitBag",
+        "upgradeBattleAxe",
+        "upgradeBlacksmithContract",
         "upgradeCatapult",
         "upgradeClub",
+        "upgradeDeepMudBog",
+        "upgradeGoldenBaitJar",
         "upgradeMudTrap",
+        "upgradeReinforcedCatapult",
       ].sort(),
     );
-    expect(ASSETS.goblinIdle.src).toContain("goblin-idle.svg");
+    expect(ASSETS.goblinIdle.src).not.toBe("");
+    expect(Object.keys(ASSETS).filter((key) => key.startsWith("goblin")).sort()).toEqual(
+      ["goblinDefeat", "goblinHit", "goblinIdle"].sort(),
+    );
+    expect(Object.keys(ASSETS)).not.toContain("attackReaction");
     expect(ASSETS.goblinHit.anchor).toEqual(ASSETS.goblinIdle.anchor);
     expect(ASSETS.goblinDefeat.recommendedSize).toEqual(ASSETS.goblinIdle.recommendedSize);
+    for (const asset of Object.values(ASSETS)) {
+      expect(asset.src).not.toMatch(/^\/src\//);
+    }
   });
 });

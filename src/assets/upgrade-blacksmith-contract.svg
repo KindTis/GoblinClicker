@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="대장장이 계약서">
+  <circle cx="32" cy="32" r="29" fill="#2e3035"/>
+  <path d="M18 14h25l5 6v31H18Z" fill="#e8dcc2"/>
+  <path d="M43 14v8h8" fill="none" stroke="#b59a72" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M24 28h17M24 36h21M24 44h12" stroke="#73512f" stroke-width="3" stroke-linecap="round"/>
+  <path d="M40 42 53 29" stroke="#c86a3d" stroke-width="5" stroke-linecap="round"/>
+  <path d="M47 24h9v9" fill="none" stroke="#d9dde1" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="43" cy="45" r="4" fill="#d04b33"/>
+</svg>

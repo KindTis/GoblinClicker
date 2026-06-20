@@ -41,7 +41,7 @@ describe("upgrades", () => {
       ...createInitialGameState(),
       coins: 18,
       catapultCooldownRemainingMs: 2400,
-      upgrades: { club: 0, catapult: 1, baitBag: 0, mudTrap: 0 },
+      upgrades: { ...createInitialGameState().upgrades, catapult: 1 },
     };
     const result = purchaseUpgrade(state, "catapult");
     expect(result.ok).toBe(true);
@@ -52,7 +52,7 @@ describe("upgrades", () => {
     expect(isClubRecommended(createInitialGameState())).toBe(true);
     const state = {
       ...createInitialGameState(),
-      upgrades: { club: 1, catapult: 0, baitBag: 0, mudTrap: 0 },
+      upgrades: { ...createInitialGameState().upgrades, club: 1 },
     };
     expect(isClubRecommended(state)).toBe(false);
   });
@@ -62,5 +62,28 @@ describe("upgrades", () => {
     expect(isClubRecommended(state)).toBe(true);
     expect(countAffordableUpgrades(state)).toBe(0);
     expect(getPurchasePreview(state, "club").missingCoins).toBe(1);
+  });
+
+  it("고티어 업그레이드도 동일한 구매 트랜잭션을 사용한다", () => {
+    const state = { ...createInitialGameState(), coins: 180 };
+    const result = purchaseUpgrade(state, "battleAxe");
+    expect(result.ok).toBe(true);
+    expect(result.state.coins).toBe(0);
+    expect(result.state.upgrades.battleAxe).toBe(1);
+  });
+
+  it("보강 투석대 선구매는 투석기 쿨다운을 시작하지 않는다", () => {
+    const state = { ...createInitialGameState(), coins: 420 };
+    const result = purchaseUpgrade(state, "reinforcedCatapult");
+    expect(result.ok).toBe(true);
+    expect(result.state.upgrades.reinforcedCatapult).toBe(1);
+    expect(result.state.upgrades.catapult).toBe(0);
+    expect(result.state.catapultCooldownRemainingMs).toBe(0);
+  });
+
+  it("구매 가능 개수는 신규 업그레이드를 포함하되 실제 비용만 센다", () => {
+    const state = { ...createInitialGameState(), coins: 180 };
+    expect(countAffordableUpgrades(state)).toBe(5);
+    expect(getPurchasePreview(state, "reinforcedCatapult").missingCoins).toBe(240);
   });
 });

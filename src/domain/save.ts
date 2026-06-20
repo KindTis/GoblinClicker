@@ -1,5 +1,5 @@
 import { CATAPULT_COOLDOWN_MS, SAVE_KEY, SAVE_VERSION, UPGRADE_ORDER } from "./constants";
-import { calculateGoblinLevel, calculateGoblinMaxHp } from "./progression";
+import { calculateGoblinLevel, calculateGoblinMaxHp, calculateMudTrapArmedLevel } from "./progression";
 import type { LoadFailureReason } from "./saveTypes";
 import type { GameState, SaveData, UpgradeId } from "./types";
 
@@ -29,6 +29,11 @@ export function createInitialGameState(): GameState {
       catapult: 0,
       baitBag: 0,
       mudTrap: 0,
+      battleAxe: 0,
+      reinforcedCatapult: 0,
+      goldenBaitJar: 0,
+      deepMudBog: 0,
+      blacksmithContract: 0,
     },
   };
 }
@@ -66,11 +71,12 @@ export function normalizeSaveData(raw: unknown): SaveData | { error: "migrationF
       : safeNonNegativeInteger(rawState.catapultCooldownRemainingMs)
         ? Math.min(rawState.catapultCooldownRemainingMs, CATAPULT_COOLDOWN_MS)
         : CATAPULT_COOLDOWN_MS;
+  const maxMudTrapArmedLevel = calculateMudTrapArmedLevel(upgrades.mudTrap, upgrades.deepMudBog);
   const mudTrapArmedLevel =
-    upgrades.mudTrap === 0
+    maxMudTrapArmedLevel === 0
       ? 0
       : safeNonNegativeInteger(rawState.mudTrapArmedLevel)
-        ? Math.min(rawState.mudTrapArmedLevel, upgrades.mudTrap)
+        ? Math.min(rawState.mudTrapArmedLevel, maxMudTrapArmedLevel)
         : 0;
 
   const save: SaveData = {

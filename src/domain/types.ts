@@ -1,6 +1,15 @@
 import type { LoadErrorReason } from "./saveTypes";
 
-export type UpgradeId = "club" | "catapult" | "baitBag" | "mudTrap";
+export type UpgradeId =
+  | "club"
+  | "catapult"
+  | "baitBag"
+  | "mudTrap"
+  | "battleAxe"
+  | "reinforcedCatapult"
+  | "goldenBaitJar"
+  | "deepMudBog"
+  | "blacksmithContract";
 
 export type UpgradeDefinition = {
   id: UpgradeId;

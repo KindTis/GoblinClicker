@@ -1,6 +1,13 @@
 import { ASSETS } from "../assets/assetManifest";
-import { UPGRADE_DEFINITIONS } from "../domain/constants";
-import { calculateCatapultDamage, calculateClickDamage, calculateGoblinLevel, calculateGoblinMaxHp, calculateUpgradeCost } from "../domain/progression";
+import { UPGRADE_DEFINITIONS, UPGRADE_ORDER } from "../domain/constants";
+import {
+  calculateCatapultDamage,
+  calculateClickDamage,
+  calculateFinalDamage,
+  calculateGoblinLevel,
+  calculateGoblinMaxHp,
+  calculateUpgradeCost,
+} from "../domain/progression";
 import { countAffordableUpgrades } from "../domain/upgrades";
 import type { EnemyRenderState, RuntimeState, UpgradeId } from "../domain/types";
 import type { PurchaseFeedback } from "../domain/runtime";
@@ -20,10 +27,48 @@ export type HudRenderState = {
 };
 
 const ghostHpByEnemyId = new Map<number, number>();
+const shopRenderKeys = new WeakMap<HTMLElement, string>();
 
 export function renderHud(root: HTMLElement, state: HudRenderState, handlers: HudHandlers): void {
-  root.replaceChildren();
-  root.append(createStatusPanel(state), createShop(state, handlers), createMobileShopToggle(state, handlers));
+  const statusPanel = createStatusPanel(state);
+  const previousShop = root.querySelector<HTMLElement>("#shop-sheet");
+  const shopKey = createShopRenderKey(state);
+  let shop = previousShop;
+  if (!shop || shopRenderKeys.get(shop) !== shopKey) {
+    const shopScrollTop = shop?.scrollTop ?? 0;
+    shop = createShop(state, handlers, shop ?? undefined);
+    shopRenderKeys.set(shop, shopKey);
+    shop.scrollTop = shopScrollTop;
+  }
+  const mobileShopToggle = createMobileShopToggle(state, handlers);
+
+  if (root.children.length === 0) {
+    root.append(statusPanel, shop, mobileShopToggle);
+    return;
+  }
+
+  const previousStatusPanel = root.querySelector<HTMLElement>(".hud-panel");
+  if (previousStatusPanel) {
+    previousStatusPanel.replaceWith(statusPanel);
+  } else {
+    root.prepend(statusPanel);
+  }
+
+  if (!shop.isConnected) {
+    const previousMobileShopToggle = root.querySelector<HTMLElement>("#shop-toggle");
+    if (previousMobileShopToggle) {
+      root.insertBefore(shop, previousMobileShopToggle);
+    } else {
+      root.append(shop);
+    }
+  }
+
+  const previousMobileShopToggle = root.querySelector<HTMLElement>("#shop-toggle");
+  if (previousMobileShopToggle) {
+    previousMobileShopToggle.replaceWith(mobileShopToggle);
+  } else {
+    root.append(mobileShopToggle);
+  }
 }
 
 function createStatusPanel(state: HudRenderState): HTMLElement {
@@ -44,8 +89,15 @@ function createStatusPanel(state: HudRenderState): HTMLElement {
   const game = state.runtime.game;
   const maxHp = state.enemy.maxHp;
   const ghostHp = selectGhostHp(state.enemy);
-  const clickDamage = calculateClickDamage(game.upgrades.club);
-  const catapultDamage = game.upgrades.catapult > 0 ? calculateCatapultDamage(clickDamage, game.upgrades.catapult) : 0;
+  const baseClickDamage = calculateClickDamage(game.upgrades.club, game.upgrades.battleAxe);
+  const clickDamage = calculateFinalDamage(baseClickDamage, game.upgrades.blacksmithContract);
+  const catapultDamage =
+    game.upgrades.catapult > 0
+      ? calculateFinalDamage(
+          calculateCatapultDamage(baseClickDamage, game.upgrades.catapult, game.upgrades.reinforcedCatapult),
+          game.upgrades.blacksmithContract,
+        )
+      : 0;
   const warning =
     state.runtime.persistence.kind === "unavailable"
       ? "저장소에 접근할 수 없어 저장되지 않음. 새로고침하면 진행이 사라질 수 있습니다."
@@ -79,8 +131,8 @@ function createStatusPanel(state: HudRenderState): HTMLElement {
   return section;
 }
 
-function createShop(state: HudRenderState, handlers: HudHandlers): HTMLElement {
-  const section = document.createElement("section");
+function createShop(state: HudRenderState, handlers: HudHandlers, existingSection?: HTMLElement): HTMLElement {
+  const section = existingSection ?? document.createElement("section");
   section.id = "shop-sheet";
   section.className = `shop-panel ${state.shopOpen ? "is-open" : ""}`;
   section.setAttribute("aria-label", "업그레이드 상점");
@@ -103,6 +155,28 @@ function createShop(state: HudRenderState, handlers: HudHandlers): HTMLElement {
     }
   }
   return section;
+}
+
+function createShopRenderKey(state: HudRenderState): string {
+  const feedbackKey = createPurchaseFeedbackKey(state.purchaseFeedback);
+  const runtime = state.runtime;
+  if (runtime.mode !== "ready" && runtime.mode !== "defeatTransition") {
+    return `${state.shopOpen}|${runtime.mode}|${feedbackKey}`;
+  }
+  const upgradeLevels = UPGRADE_ORDER.map((upgradeId) => `${upgradeId}:${runtime.game.upgrades[upgradeId]}`).join(",");
+  return `${state.shopOpen}|${runtime.mode}|${runtime.game.coins}|${upgradeLevels}|${feedbackKey}`;
+}
+
+function createPurchaseFeedbackKey(feedback: PurchaseFeedback | null): string {
+  if (!feedback) return "none";
+  switch (feedback.type) {
+    case "success":
+      return `${feedback.type}:${feedback.upgradeId}:${feedback.nextLevel}`;
+    case "insufficientCoins":
+      return `${feedback.type}:${feedback.upgradeId}:${feedback.missingCoins}`;
+    case "blockedByDefeatTransition":
+      return `${feedback.type}:${feedback.upgradeId}`;
+  }
 }
 
 function createShopRow(

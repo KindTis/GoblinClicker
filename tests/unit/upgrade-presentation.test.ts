@@ -9,6 +9,11 @@ describe("upgradePresentation", () => {
       "upgradeCatapult",
       "upgradeBaitBag",
       "upgradeMudTrap",
+      "upgradeBattleAxe",
+      "upgradeReinforcedCatapult",
+      "upgradeGoldenBaitJar",
+      "upgradeDeepMudBog",
+      "upgradeBlacksmithContract",
     ]);
   });
 });

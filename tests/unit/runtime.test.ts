@@ -17,7 +17,7 @@ describe("runtime", () => {
         ...createInitialRuntimeState().game,
         goblinHp: 10,
         catapultCooldownRemainingMs: 1,
-        upgrades: { club: 0, catapult: 1, baitBag: 0, mudTrap: 0 },
+        upgrades: { ...createInitialRuntimeState().game.upgrades, catapult: 1 },
       },
       runtimeClock: { lastDirectAttackAtMs: null, lastVisibleTickAtMs: 0 },
     };

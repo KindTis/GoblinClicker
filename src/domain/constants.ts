@@ -11,7 +11,17 @@ export const DEFEAT_TRANSITION_MS = 300;
 export const DAMAGE_NUMBER_LIFETIME_MS = 600;
 export const HP_GHOST_BAR_DELAY_MS = 250;
 
-export const UPGRADE_ORDER: UpgradeId[] = ["club", "catapult", "baitBag", "mudTrap"];
+export const UPGRADE_ORDER: UpgradeId[] = [
+  "club",
+  "catapult",
+  "baitBag",
+  "mudTrap",
+  "battleAxe",
+  "reinforcedCatapult",
+  "goldenBaitJar",
+  "deepMudBog",
+  "blacksmithContract",
+];
 
 export const UPGRADE_DEFINITIONS: Record<UpgradeId, UpgradeDefinition> = {
   club: {
@@ -41,5 +51,40 @@ export const UPGRADE_DEFINITIONS: Record<UpgradeId, UpgradeDefinition> = {
     baseCost: 90,
     growthRate: 1.85,
     description: "새 고블린 첫 직접 공격 배율 = 1 + 2 * 준비 레벨",
+  },
+  battleAxe: {
+    id: "battleAxe",
+    name: "날 선 전투 도끼",
+    baseCost: 180,
+    growthRate: 1.9,
+    description: "클릭 피해 +3",
+  },
+  reinforcedCatapult: {
+    id: "reinforcedCatapult",
+    name: "보강 투석대",
+    baseCost: 420,
+    growthRate: 1.95,
+    description: "투석기 보유 시 자동 피해 증가",
+  },
+  goldenBaitJar: {
+    id: "goldenBaitJar",
+    name: "황금 미끼 항아리",
+    baseCost: 900,
+    growthRate: 2,
+    description: "처치 보상 비례 증가",
+  },
+  deepMudBog: {
+    id: "deepMudBog",
+    name: "깊은 진흙 수렁",
+    baseCost: 1800,
+    growthRate: 2.08,
+    description: "다음 고블린 첫 타격 강화",
+  },
+  blacksmithContract: {
+    id: "blacksmithContract",
+    name: "대장장이 계약서",
+    baseCost: 4200,
+    growthRate: 2.2,
+    description: "모든 피해 최종 배율 증가",
   },
 };

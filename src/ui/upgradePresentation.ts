@@ -6,4 +6,9 @@ export const UPGRADE_PRESENTATION: Record<UpgradeId, { iconAssetKey: AssetKey }>
   catapult: { iconAssetKey: "upgradeCatapult" },
   baitBag: { iconAssetKey: "upgradeBaitBag" },
   mudTrap: { iconAssetKey: "upgradeMudTrap" },
+  battleAxe: { iconAssetKey: "upgradeBattleAxe" },
+  reinforcedCatapult: { iconAssetKey: "upgradeReinforcedCatapult" },
+  goldenBaitJar: { iconAssetKey: "upgradeGoldenBaitJar" },
+  deepMudBog: { iconAssetKey: "upgradeDeepMudBog" },
+  blacksmithContract: { iconAssetKey: "upgradeBlacksmithContract" },
 };

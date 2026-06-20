@@ -10,6 +10,7 @@ import {
   INITIAL_GOBLIN_HP,
   SAVE_KEY,
   SAVE_VERSION,
+  UPGRADE_DEFINITIONS,
   UPGRADE_ORDER,
 } from "../../src/domain/constants";
 
@@ -28,6 +29,24 @@ describe("constants", () => {
   });
 
   it("상점 표시 순서를 고정한다", () => {
-    expect(UPGRADE_ORDER).toEqual(["club", "catapult", "baitBag", "mudTrap"]);
+    expect(UPGRADE_ORDER).toEqual([
+      "club",
+      "catapult",
+      "baitBag",
+      "mudTrap",
+      "battleAxe",
+      "reinforcedCatapult",
+      "goldenBaitJar",
+      "deepMudBog",
+      "blacksmithContract",
+    ]);
+  });
+
+  it("고티어 업그레이드 비용과 성장률을 스펙 값으로 제공한다", () => {
+    expect(UPGRADE_DEFINITIONS.battleAxe).toMatchObject({ name: "날 선 전투 도끼", baseCost: 180, growthRate: 1.9 });
+    expect(UPGRADE_DEFINITIONS.reinforcedCatapult).toMatchObject({ name: "보강 투석대", baseCost: 420, growthRate: 1.95 });
+    expect(UPGRADE_DEFINITIONS.goldenBaitJar).toMatchObject({ name: "황금 미끼 항아리", baseCost: 900, growthRate: 2 });
+    expect(UPGRADE_DEFINITIONS.deepMudBog).toMatchObject({ name: "깊은 진흙 수렁", baseCost: 1800, growthRate: 2.08 });
+    expect(UPGRADE_DEFINITIONS.blacksmithContract).toMatchObject({ name: "대장장이 계약서", baseCost: 4200, growthRate: 2.2 });
   });
 });

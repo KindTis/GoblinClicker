@@ -9,6 +9,7 @@ export class GoblinScene extends Phaser.Scene {
   private inputBlocked = true;
   private hitTimer: Phaser.Time.TimerEvent | null = null;
   private damageTexts: Phaser.GameObjects.Text[] = [];
+  private showingHitReaction = false;
 
   constructor() {
     super("GoblinScene");
@@ -16,7 +17,7 @@ export class GoblinScene extends Phaser.Scene {
 
   preload(): void {
     for (const asset of Object.values(ASSETS)) {
-      this.load.image(asset.key, asset.src);
+      this.load.svg(asset.key, asset.src, asset.recommendedSize);
     }
   }
 
@@ -54,9 +55,16 @@ export class GoblinScene extends Phaser.Scene {
   private renderGoblinVisualState(state: EnemyRenderState): void {
     this.baseEnemyRenderState = state;
     if (!this.goblinSprite) return;
-    this.goblinSprite.setTexture(state.visualState === "defeated" ? "goblinDefeat" : "goblinIdle");
+    if (state.visualState === "defeated") {
+      this.showingHitReaction = false;
+      this.hitTimer?.remove(false);
+      this.goblinSprite.setTexture("goblinDefeat");
+    } else if (!this.showingHitReaction) {
+      this.goblinSprite.setTexture("goblinIdle");
+    }
     this.goblinSprite.setAlpha(1);
     this.goblinSprite.setScale(1);
+    this.bringTransientEffectsToTop();
   }
 
   private applyVisualEffects(effects: SceneVisualEffect[]): void {
@@ -87,6 +95,21 @@ export class GoblinScene extends Phaser.Scene {
     allowHitState: boolean,
   ): void {
     if (!this.goblinSprite) return;
+    if (allowHitState) {
+      this.showingHitReaction = true;
+      this.goblinSprite.setTexture("goblinHit");
+      this.hitTimer?.remove(false);
+      const capturedId = this.baseEnemyRenderState?.enemyInstanceId;
+      this.hitTimer = this.time.delayedCall(260, () => {
+        const renderState = this.baseEnemyRenderState;
+        if (renderState && renderState.enemyInstanceId === capturedId && renderState.visualState === "idle") {
+          this.showingHitReaction = false;
+          this.goblinSprite?.setTexture("goblinIdle");
+          this.bringTransientEffectsToTop();
+        }
+      });
+    }
+
     const text = this.add
       .text(this.goblinSprite.x + (effect.source === "catapult" ? 32 : -20), this.goblinSprite.y - 100, `-${effect.damage}`, {
         color: effect.source === "catapult" ? "#f8d36a" : "#ffffff",
@@ -96,7 +119,8 @@ export class GoblinScene extends Phaser.Scene {
         stroke: "#2a160c",
         strokeThickness: 4,
       })
-      .setDepth(5);
+      .setDepth(6);
+    this.children.bringToTop(text);
     this.damageTexts.push(text);
     while (this.damageTexts.length > 6) {
       this.damageTexts.shift()?.destroy();
@@ -111,22 +135,20 @@ export class GoblinScene extends Phaser.Scene {
         text.destroy();
       },
     });
+  }
 
-    if (allowHitState) {
-      this.goblinSprite.setTexture("goblinHit");
-      this.hitTimer?.remove(false);
-      const capturedId = this.baseEnemyRenderState?.enemyInstanceId;
-      this.hitTimer = this.time.delayedCall(120, () => {
-        const renderState = this.baseEnemyRenderState;
-        if (renderState && renderState.enemyInstanceId === capturedId && renderState.visualState === "idle") {
-          this.goblinSprite?.setTexture("goblinIdle");
-        }
-      });
+  private bringTransientEffectsToTop(): void {
+    for (const text of this.damageTexts) {
+      if (text.active) {
+        this.children.bringToTop(text);
+      }
     }
   }
 
   private showDefeat(): void {
     if (!this.goblinSprite) return;
+    this.showingHitReaction = false;
+    this.hitTimer?.remove(false);
     this.goblinSprite.setTexture("goblinDefeat");
     const dust = this.add.image(this.goblinSprite.x, this.goblinSprite.y + 48, "defeatDust").setDisplaySize(160, 100).setDepth(4);
     this.tweens.add({

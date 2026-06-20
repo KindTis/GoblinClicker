@@ -173,7 +173,21 @@ function assertGameStateForTest(state: unknown): void {
   assertNonNegativeInteger(state.defeatedCount, "defeatedCount");
   assertNonNegativeInteger(state.coins, "coins");
   assertPlainObject(state.upgrades, "upgrades");
-  assertExactKeys(state.upgrades, ["baitBag", "catapult", "club", "mudTrap"], "upgrades");
+  assertExactKeys(
+    state.upgrades,
+    [
+      "baitBag",
+      "battleAxe",
+      "blacksmithContract",
+      "catapult",
+      "club",
+      "deepMudBog",
+      "goldenBaitJar",
+      "mudTrap",
+      "reinforcedCatapult",
+    ],
+    "upgrades",
+  );
   for (const level of Object.values(state.upgrades)) {
     assertNonNegativeInteger(level, "upgrade level");
   }

@@ -23,7 +23,7 @@ describe("combat", () => {
       ...createInitialGameState(),
       goblinHp: 20,
       mudTrapArmedLevel: 2,
-      upgrades: { club: 1, catapult: 0, baitBag: 0, mudTrap: 2 },
+      upgrades: { ...createInitialGameState().upgrades, club: 1, mudTrap: 2 },
     };
     const result = applyDirectAttack(state);
     expect(result.damage).toBe(10);
@@ -37,7 +37,7 @@ describe("combat", () => {
       goblinHp: 20,
       catapultCooldownRemainingMs: 100,
       mudTrapArmedLevel: 3,
-      upgrades: { club: 1, catapult: 1, baitBag: 0, mudTrap: 3 },
+      upgrades: { ...createInitialGameState().upgrades, club: 1, catapult: 1, mudTrap: 3 },
     };
     const result = tickCatapult(state, 180, "visible");
     expect(result.fired).toBe(true);
@@ -51,10 +51,56 @@ describe("combat", () => {
     const state = {
       ...createInitialGameState(),
       catapultCooldownRemainingMs: 100,
-      upgrades: { club: 0, catapult: 1, baitBag: 0, mudTrap: 0 },
+      upgrades: { ...createInitialGameState().upgrades, catapult: 1 },
     };
     const result = tickCatapult(state, 180, "hidden");
     expect(result.fired).toBe(false);
     expect(result.state.catapultCooldownRemainingMs).toBe(100);
+  });
+
+  it("날 선 전투 도끼와 대장장이 계약서는 직접 피해에 최종 배율로 적용된다", () => {
+    const state = {
+      ...createInitialGameState(),
+      goblinHp: 100,
+      mudTrapArmedLevel: 2,
+      upgrades: { ...createInitialGameState().upgrades, club: 1, mudTrap: 2, battleAxe: 2, blacksmithContract: 1 },
+    };
+    const result = applyDirectAttack(state);
+    expect(result.damage).toBe(47);
+    expect(result.state.goblinHp).toBe(53);
+    expect(result.state.mudTrapArmedLevel).toBe(0);
+  });
+
+  it("보강 투석대와 대장장이 계약서는 자동 피해에 최종 배율로 적용된다", () => {
+    const state = {
+      ...createInitialGameState(),
+      goblinHp: 100,
+      catapultCooldownRemainingMs: 100,
+      upgrades: {
+        ...createInitialGameState().upgrades,
+        club: 1,
+        catapult: 1,
+        battleAxe: 1,
+        reinforcedCatapult: 2,
+        blacksmithContract: 1,
+      },
+    };
+    const result = tickCatapult(state, 180, "visible");
+    expect(result.fired).toBe(true);
+    expect(result.damage).toBe(47);
+    expect(result.state.goblinHp).toBe(53);
+  });
+
+  it("황금 미끼 항아리 보상과 깊은 진흙 수렁 준비 레벨을 처치 시 반영한다", () => {
+    const state = {
+      ...createInitialGameState(),
+      defeatedCount: 9,
+      goblinHp: 1,
+      upgrades: { ...createInitialGameState().upgrades, baitBag: 1, goldenBaitJar: 2, mudTrap: 1, deepMudBog: 2 },
+    };
+    const result = applyDirectAttack(state);
+    expect(result.defeated).toBe(true);
+    expect(result.state.coins).toBe(13);
+    expect(result.state.mudTrapArmedLevel).toBe(5);
   });
 });
