@@ -108,6 +108,72 @@ test("상점은 상위 업그레이드 5종을 표시하고 저장 복원한다"
   await expect(page.getByText("레벨 1 · 비용 342")).toBeVisible();
 });
 
+test("새 게임 시작 확인 모달의 취소와 확인 버튼이 동작한다", async ({ page }) => {
+  await page.goto("/");
+  await expect.poll(() => page.evaluate(() => window.__goblinTest?.getRuntimeSnapshot().mode)).toBe("ready");
+
+  await page.evaluate(() => {
+    const harness = window.__goblinTest;
+    const state = harness?.getRuntimeSnapshot();
+    if (!harness || state?.mode !== "ready") {
+      throw new Error("test harness ready state is required");
+    }
+    harness.setRuntimeState({
+      ...state,
+      game: {
+        ...state.game,
+        coins: 123,
+        defeatedCount: 7,
+        upgrades: { ...state.game.upgrades, club: 2 },
+      },
+    });
+  });
+
+  const shopToggle = page.getByRole("button", { name: /상점 열기/ });
+  if (await shopToggle.isVisible()) {
+    await shopToggle.click();
+  }
+
+  const newGameButton = page.locator(".reset-button");
+  await newGameButton.scrollIntoViewIfNeeded();
+  await newGameButton.click();
+
+  const dialog = page.getByRole("dialog", { name: "새 게임 시작 확인" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "취소" }).click();
+  await expect(dialog).toBeHidden();
+  await expect.poll(() => page.evaluate(() => window.__goblinTest?.getRuntimeSnapshot().mode)).toBe("ready");
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const state = window.__goblinTest?.getRuntimeSnapshot();
+        return state?.mode === "ready" ? state.game.coins : null;
+      }),
+    )
+    .toBe(123);
+
+  await newGameButton.scrollIntoViewIfNeeded();
+  await newGameButton.click();
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "새 게임 시작" }).click();
+
+  await expect(dialog).toBeHidden();
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const state = window.__goblinTest?.getRuntimeSnapshot();
+        return state?.mode === "ready"
+          ? {
+              coins: state.game.coins,
+              defeatedCount: state.game.defeatedCount,
+              clubLevel: state.game.upgrades.club,
+            }
+          : null;
+      }),
+    )
+    .toEqual({ coins: 0, defeatedCount: 0, clubLevel: 0 });
+});
+
 test("우측 상점 패널은 투석기 렌더 중에도 스크롤 위치를 유지한다", async ({ page, isMobile }) => {
   test.skip(isMobile, "desktop project only");
   await page.setViewportSize({ width: 900, height: 360 });
